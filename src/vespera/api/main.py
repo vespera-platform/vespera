@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
-from uuid import UUID, uuid4
+from uuid import UUID
 from contextlib import asynccontextmanager
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError

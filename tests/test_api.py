@@ -7,7 +7,7 @@ client = TestClient(app)
 def test_healthz():
     response = client.get("/healthz")
     assert response.status_code == 200
-    assert response.json() == {"status": "okk"}
+    assert response.json() == {"status": "ok"}
 
 
 def test_create_target_invalid_url():
