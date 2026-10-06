@@ -38,11 +38,11 @@ def test_connection_error_is_down():
     assert r.status_code == None
     assert r.error == "odmowa"
 
-def test_500_is_down():
+def test_is_down_500():
     r = run_probe(lambda request: httpx.Response(500))
     assert r.ok is False
 
 
-def test_499_is_up():
+def test_is_up_499():
     r = run_probe(lambda request: httpx.Response(499))
     assert r.ok is True
