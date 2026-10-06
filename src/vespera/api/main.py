@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
 
-from vespera.api.models import Target
-from vespera.api.schemas import TargetIn, TargetOut
+from vespera.api.models import Target, Check
+from vespera.api.schemas import TargetIn, TargetOut, CheckOut
 from vespera.common.db import get_db
 
 app = FastAPI(title="Vespera")
@@ -59,3 +59,11 @@ def readyz(db: Session = Depends(get_db)):
 @app.get("/healthz")
 def healthz():
     return {"status": "ok"}
+
+
+@app.get("/targets/{target_id}/checks")
+def list_checks(target_id: UUID, limit: int = 20, db: Session = Depends(get_db)) -> list[CheckOut]:
+    target = db.get(Target, target_id)
+    if target is None:
+        raise HTTPException(status_code=404, detail="Target not found")
+    return db.scalars(select(Check).where(Check.target_id == target.id).order_by(Check.id.desc()).limit(limit)).all()
