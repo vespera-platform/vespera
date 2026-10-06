@@ -10,9 +10,6 @@ from vespera.api.models import Target
 from vespera.api.schemas import TargetIn, TargetOut
 from vespera.common.db import Base, engine, get_db
 
-from src.vespera.common import db
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
