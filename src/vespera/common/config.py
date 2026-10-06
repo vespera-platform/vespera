@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     vespera_version: str = "dev"
     log_level: str = "INFO"
     database_url: SecretStr
-    http_port: int = 8000
+
 
 @lru_cache
 def get_settings() -> Settings:
