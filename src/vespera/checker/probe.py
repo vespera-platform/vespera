@@ -13,10 +13,10 @@ class ProbeResult:
     error: str | None
 
 
-def probe(url: str) -> ProbeResult:
+async def probe(client: httpx.AsyncClient, url: str) -> ProbeResult:
     start = time.perf_counter()
     try:
-        r = httpx.get(url, timeout=TIMEOUT_S)
+        r = await client.get(url)
         latency_ms = int((time.perf_counter() - start) * 1000)
     except httpx.TimeoutException:
         return ProbeResult(False, None, None, "timeout")
