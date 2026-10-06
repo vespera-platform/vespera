@@ -1,22 +1,20 @@
 from fastapi import FastAPI, HTTPException, Depends
 from uuid import UUID
-from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
 from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from vespera.api.models import Target
 from vespera.api.schemas import TargetIn, TargetOut
-from vespera.common.db import Base, engine, get_db
+from vespera.common.db import get_db
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    Base.metadata.create_all(engine)
-    yield
-app = FastAPI(title="Vespera", lifespan=lifespan)
+app = FastAPI(title="Vespera")
+
+
 @app.get("/")
 def root():
     return {"app": "vespera"}
+
 
 @app.post("/targets", status_code=201)
 def create_target(target: TargetIn, db: Session = Depends(get_db)) -> TargetOut:
@@ -26,9 +24,11 @@ def create_target(target: TargetIn, db: Session = Depends(get_db)) -> TargetOut:
     db.refresh(new_target)
     return new_target
 
+
 @app.get("/targets")
 def list_targets(db: Session = Depends(get_db)) -> list[TargetOut]:
     return db.scalars(select(Target)).all()
+
 
 @app.get("/targets/{target_id}")
 def get_target(target_id: UUID, db: Session = Depends(get_db)) -> TargetOut:
@@ -36,6 +36,7 @@ def get_target(target_id: UUID, db: Session = Depends(get_db)) -> TargetOut:
     if target is None:
         raise HTTPException(status_code=404, detail="Target not found")
     return target
+
 
 @app.delete("/targets/{target_id}", status_code=204)
 def delete_target(target_id: UUID, db: Session = Depends(get_db)) -> None:
@@ -45,6 +46,7 @@ def delete_target(target_id: UUID, db: Session = Depends(get_db)) -> None:
     db.delete(target)
     db.commit()
 
+
 @app.get("/readyz")
 def readyz(db: Session = Depends(get_db)):
     try:
@@ -52,6 +54,7 @@ def readyz(db: Session = Depends(get_db)):
     except SQLAlchemyError:
         raise HTTPException(status_code=503, detail="database unavailable")
     return {"status": "ready"}
+
 
 @app.get("/healthz")
 def healthz():

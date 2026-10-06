@@ -1,4 +1,5 @@
 import logging
+import time
 from vespera.checker.probe import probe
 from sqlalchemy import select
 from vespera.common.db import SessionLocal
@@ -10,6 +11,14 @@ log = logging.getLogger(__name__)
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    interval = get_settings().check_interval
+    while True:
+        tick()
+        time.sleep(interval)
+
+
+def tick() -> None:
     with SessionLocal() as session:
         targets = session.scalars(select(Target)).all()
     for t in targets:

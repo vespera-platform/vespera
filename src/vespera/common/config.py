@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     vespera_version: str = "dev"
     log_level: str = "INFO"
     database_url: SecretStr
-
+    check_interval: int = 10
 
 @lru_cache
 def get_settings() -> Settings:
