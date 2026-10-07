@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     database_url: SecretStr
     check_interval: int = 10
+    webhook_url: str
+    redis_url: str
 
 @lru_cache
 def get_settings() -> Settings:
