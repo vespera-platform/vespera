@@ -1,6 +1,7 @@
 import logging
 import time
 import asyncio
+import signal
 
 import redis.asyncio as aioredis
 import httpx
@@ -15,17 +16,30 @@ from vespera.common.config import get_settings
 
 log = logging.getLogger(__name__)
 
+stopping = False
+
+def handle_sigterm(signum, frame):
+    global stopping
+    log.info("SIGTERM received")
+    stopping = True
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger("httpx").setLevel(logging.WARNING)  #  usuwanie powielajacych sie logow
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    signal.signal(signal.SIGTERM, handle_sigterm)
     interval = get_settings().check_interval
-    while True:
+
+    while not stopping:
         start = time.perf_counter()
         asyncio.run(tick())
         log.info("tick took %.1f s", time.perf_counter() - start)
-        time.sleep(interval)
 
+        for _ in range(interval):
+            if stopping:
+                break
+            time.sleep(1)
+
+    log.info("finishing tick, bye")
 
 def state(r) -> str:
     return "UP" if r.ok else "DOWN"
