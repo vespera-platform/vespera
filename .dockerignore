@@ -1,0 +1,13 @@
+.env
+.git
+.venv
+.idea
+.pytest_cache
+tests
+.env.example
+**/__pycache__
+docker-compose.yaml
+docker/
+.gitignore
+.gitattributes
+.dockerignore

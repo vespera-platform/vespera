@@ -1,6 +1,10 @@
 services:
   postgres:
     image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vespera -d vespera"]
+      interval: 2s
+      retries: 15
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -9,6 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
   redis:
     image: redis:7
     command: redis-server --appendonly yes
@@ -16,6 +21,64 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+
+  migrate:
+    image: vespera:dev
+    command: alembic upgrade head
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: vespera:dev
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  checker:
+    image: vespera:dev
+    command: python -m vespera.checker.main
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  notifier:
+    image: vespera:dev
+    command: python -m vespera.notifier.main
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      WEBHOOK_URL: http://target-sim:8000/hook
+
+  target-sim:
+    image: vespera:dev
+    command: uvicorn vespera.targetsim.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8001:8000"
+
 volumes:
   pgdata:
   redis-data:
