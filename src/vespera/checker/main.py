@@ -2,6 +2,7 @@ import logging
 import time
 import asyncio
 import signal
+import os
 
 import redis.asyncio as aioredis
 import httpx
@@ -13,10 +14,16 @@ from vespera.checker.probe import probe, TIMEOUT_S
 from vespera.common.db import SessionLocal
 from vespera.api.models import Target, Check
 from vespera.common.config import get_settings
+from vespera.common.sharding import shard_of
 
 log = logging.getLogger(__name__)
 
 stopping = False
+
+def shard_index() -> int:
+    if get_settings().shard_count == 1:
+        return 0
+    return int(os.environ["HOSTNAME"].rsplit("-", 1)[1])
 
 def handle_sigterm(signum, frame):
     global stopping
@@ -29,6 +36,7 @@ def main() -> None:
     signal.signal(signal.SIGTERM, handle_sigterm)
     interval = get_settings().check_interval
 
+    log.info("shard %d of %d", shard_index(), get_settings().shard_count)
     while not stopping:
         start = time.perf_counter()
         asyncio.run(tick())
@@ -47,6 +55,10 @@ def state(r) -> str:
 async def tick() -> None:
     with SessionLocal() as session:
         targets = session.scalars(select(Target)).all()
+
+    count = get_settings().shard_count
+    me = shard_index()
+    targets = [t for t in targets if shard_of(t.id, count) == me]
 
     sem = asyncio.Semaphore(20)
 
