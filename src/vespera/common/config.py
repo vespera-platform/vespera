@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     check_interval: int = 10
     webhook_url: str
     redis_url: str
+    shard_count: int = 1
 
 @lru_cache
 def get_settings() -> Settings:
