@@ -1,7 +1,3 @@
-image:
-  repository: "vespera"
-  tag: "e7b922c"
-
 api:
   replicas: "1"
   host: "api.vespera.localtest.me"
