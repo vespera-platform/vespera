@@ -1,3 +1,9 @@
 image:
   repository: "vespera"
   tag: "e7b922c"
+
+api:
+  replicas: 2
+  host: "" #potem ustawić
+
+

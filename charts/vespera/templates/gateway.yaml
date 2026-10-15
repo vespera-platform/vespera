@@ -21,7 +21,7 @@ spec:
   parentRefs:
     - name: vespera-gateway
   hostnames:
-    - "api.vespera.localtest.me"
+    - {{ required "api.host jest wymagane - podaj -f values-<env>.yaml" .Values.api.host | quote }}
   rules:
     - backendRefs:
       - name: api
