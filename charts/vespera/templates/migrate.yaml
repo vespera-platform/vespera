@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+  namespace: {{ .Release.Namespace }}
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          command: ["alembic", "upgrade", "head"]
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vespera-db
+                  key: password
+            - name: DATABASE_URL
+              value: postgresql+psycopg://vespera:$(DB_PASSWORD)@postgres:5432/vespera
+            - name: REDIS_URL
+              value: redis://redis:6379/0
+            - name: WEBHOOK_URL
+              value: http://target-sim:8000/hook
