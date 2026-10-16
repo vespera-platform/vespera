@@ -2,7 +2,7 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: vespera-gateway
-  namespace: vespera-dev
+  namespace: {{ .Release.Namespace }}
 spec:
   gatewayClassName: cloud-provider-kind
   listeners:
@@ -16,12 +16,12 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: api
-  namespace: vespera-dev
+  namespace: {{ .Release.Namespace }}
 spec:
   parentRefs:
     - name: vespera-gateway
   hostnames:
-    - "api.vespera.localtest.me"
+    - {{ required "api.host jest wymagane - podaj -f values-<env>.yaml" .Values.api.host | quote }}
   rules:
     - backendRefs:
       - name: api

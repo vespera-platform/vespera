@@ -1,16 +1,24 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: migrate
-  namespace: vespera-dev
+  name: notifier
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: notifier
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notifier
   template:
+    metadata:
+      labels:
+        app: notifier
     spec:
-      restartPolicy: Never
       containers:
-        - name: migrate
-          image: vespera:e7b922c
-          command: ["alembic", "upgrade", "head"]
+        - name: notifier-cont
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          command: ["python", "-m", "vespera.notifier.main"]
           env:
             - name: DB_PASSWORD
               valueFrom:
