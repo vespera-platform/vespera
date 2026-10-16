@@ -5,6 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: checker
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   replicas: 2
   selector:
