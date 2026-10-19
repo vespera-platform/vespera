@@ -15,27 +15,27 @@ def run_probe(handler):
 def test_is_up_200():
     r = run_probe(lambda request: httpx.Response(200))
     assert r.status_code == 200
-    assert r.ok == True
+    assert r.ok
 
 def test_is_down_503():
     r = run_probe(lambda request: httpx.Response(503))
     assert r.status_code == 503
-    assert r.ok == False
+    assert not r.ok
 
 def test_is_down_timeout():
     def handler(request):
         raise httpx.ReadTimeout("za wolno", request=request)
     r = run_probe(handler)
-    assert r.ok == False
-    assert r.status_code == None
+    assert not r.ok
+    assert r.status_code is None
     assert r.error == "timeout"
 
 def test_connection_error_is_down():
     def handler(request):
         raise httpx.ConnectError("odmowa", request=request)
     r = run_probe(handler)
-    assert r.ok == False
-    assert r.status_code == None
+    assert not r.ok
+    assert r.status_code is None
     assert r.error == "odmowa"
 
 def test_is_down_500():

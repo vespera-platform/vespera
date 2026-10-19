@@ -13,3 +13,8 @@ def test_healthz():
 def test_create_target_invalid_url():
     response = client.post("/targets", json={"name": "zly", "url": "abc"})
     assert response.status_code == 422
+
+def test_version():
+    response = client.get("/version")
+    assert response.status_code == 200
+    assert "version" in response.json()
