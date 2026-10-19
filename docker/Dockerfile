@@ -9,5 +9,7 @@ WORKDIR /app
 COPY --from=builder /app /app
 RUN useradd -u 10001 app
 ENV PATH="/app/.venv/bin:$PATH"
+ARG GIT_SHA=dev
+ENV VESPERA_VERSION=$GIT_SHA
 USER 10001
 CMD ["uvicorn", "vespera.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

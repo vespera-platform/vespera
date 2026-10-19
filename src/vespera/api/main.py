@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from vespera.api.models import Target, Check
 from vespera.api.schemas import TargetIn, TargetOut, CheckOut
 from vespera.common.db import get_db
-
+from vespera.common.config import get_settings
 app = FastAPI(title="Vespera")
 
 
@@ -67,3 +67,7 @@ def list_checks(target_id: UUID, limit: int = 20, db: Session = Depends(get_db))
     if target is None:
         raise HTTPException(status_code=404, detail="Target not found")
     return db.scalars(select(Check).where(Check.target_id == target.id).order_by(Check.id.desc()).limit(limit)).all()
+
+@app.get("/version")
+def version():
+    return {"version": get_settings().vespera_version}
