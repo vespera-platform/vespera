@@ -4,6 +4,9 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from vespera.common.config import get_settings
+from vespera.common.db import Base
+import vespera.api.models  # noqa: F401  #  rejestruje modele w base.metadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -18,9 +21,6 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from vespera.common.config import get_settings
-from vespera.common.db import Base
-import vespera.api.models  # noqa: F401  #  rejestruje modele w base.metadata
 
 config.set_main_option(
     "sqlalchemy.url",
