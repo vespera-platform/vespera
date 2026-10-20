@@ -31,3 +31,36 @@ jobs:
           push: true
           tags: ghcr.io/vespera-platform/vespera:${{ github.sha }}
           build-args: GIT_SHA=${{ github.sha }}
+
+  promote:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: token App
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ vars.GITOPS_APP_ID }}
+          private-key: ${{ secrets.GITOPS_APP_PRIVATE_KEY }}
+          owner: vespera-platform
+          repositories: vespera-gitops
+
+      - name: checkout
+        uses: actions/checkout@v7
+        with:
+          repository: vespera-platform/vespera-gitops
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: tag/commit/merge
+        run: |
+          git config user.name "vespera-ci-bot[bot]"
+          git config user.email "vespera-ci-bot[bot]@users.noreply.github.com"
+          git switch -c bump/dev-${{ github.sha }}
+          yq -i '.image.tag = "${{ github.sha }}"' envs/dev/values.yaml
+          git commit -am "ci: dev -> ${{ github.sha }}"
+          git push -u origin HEAD
+          gh pr create --fill
+          gh pr merge --squash --delete-branch
+
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token}}
