@@ -23,14 +23,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: build i push
+      - name: build
         uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile
-          push: true
+          push: false
+          load: true
           tags: ghcr.io/vespera-platform/vespera:${{ github.sha }}
           build-args: GIT_SHA=${{ github.sha }}
+
+      - name: run Trivy scanner
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: 'image'
+          image-ref: ghcr.io/vespera-platform/vespera:${{ github.sha }}
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: 1
+
+      - name: push
+        run: docker push ghcr.io/vespera-platform/vespera:${{ github.sha }}
 
   promote:
     needs: build
