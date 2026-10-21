@@ -56,6 +56,17 @@ jobs:
       - name: sign
         run: cosign sign --yes ${{ steps.digest.outputs.ref }}
 
+      - name: sbom
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ steps.digest.outputs.ref }}
+          format: 'cyclonedx-json'
+          output-file: sbom.cdx.json
+
+      - name: attest sbom
+        run: cosign attest --yes --type='cyclonedx' --predicate sbom.cdx.json ${{ steps.digest.outputs.ref }}
+
+
   promote:
     needs: build
     runs-on: ubuntu-latest
