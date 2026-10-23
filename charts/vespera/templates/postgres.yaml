@@ -55,7 +55,7 @@ spec:
                   name: vespera-db
                   key: password
             - name: PGDATA
-              value: /var/lib/postresql/data/pgdata
+              value: /var/lib/postgresql/data/pgdata
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
