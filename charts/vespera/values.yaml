@@ -9,3 +9,7 @@ api:
 networkPolicy:
   gatewayCIDR: ""
   #clusterCIDRs: wymagane w envs
+
+externalSecret:
+  store: ""       #  wymagane w envs
+  remoteKey: ""   #  wymagane w envs
