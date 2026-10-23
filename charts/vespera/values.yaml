@@ -6,4 +6,6 @@ api:
   replicas: 2
   host: "" #potem ustawić
 
-
+networkPolicy:
+  gatewayCIDR: ""
+  #clusterCIDRs: wymagane w envs
