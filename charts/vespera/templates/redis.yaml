@@ -28,6 +28,13 @@ spec:
       labels:
         app: redis
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsGroup: 999
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: redis
           image: redis:7
@@ -38,6 +45,11 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: redis-data
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+
   volumeClaimTemplates:
     - metadata:
         name: redis-data

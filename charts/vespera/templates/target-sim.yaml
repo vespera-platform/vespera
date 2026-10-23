@@ -35,3 +35,11 @@ spec:
           ports:
             - containerPort: 8000
               name: targetsim-port
+          securityContext:
+                {{- include "vespera.securityContext" . | nindent 12 }}
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+      volumes:
+        - name: tmp
+          emptyDir: { }
