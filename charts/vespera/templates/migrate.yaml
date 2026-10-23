@@ -36,6 +36,7 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: tmp
+      serviceAccountName: migrate
       volumes:
         - name: tmp
           emptyDir: { }

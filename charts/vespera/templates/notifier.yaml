@@ -38,6 +38,7 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: tmp
+      serviceAccountName: notifier
       volumes:
         - name: tmp
           emptyDir: { }

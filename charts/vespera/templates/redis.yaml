@@ -49,6 +49,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
+      serviceAccountName: redis
 
   volumeClaimTemplates:
     - metadata:
