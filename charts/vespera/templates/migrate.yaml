@@ -10,6 +10,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   template:
+    metadata:
+      labels:
+        app: migrate
     spec:
       restartPolicy: Never
       containers:

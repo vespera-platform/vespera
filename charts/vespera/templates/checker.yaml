@@ -36,7 +36,7 @@ spec:
             - name: WEBHOOK_URL
               value: http://target-sim:8000/hook
           securityContext:
-                {{- include "vespera.securityContext" . | nindent 12 }}
+            {{- include "vespera.securityContext" . | nindent 12 }}
           volumeMounts:
             - mountPath: /tmp
               name: tmp
