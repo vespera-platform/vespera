@@ -28,6 +28,13 @@ spec:
       labels:
         app: postgres
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsGroup: 999
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: postgres
           image: postgres:16
@@ -47,6 +54,11 @@ spec:
                 secretKeyRef:
                   name: vespera-db
                   key: password
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+
   volumeClaimTemplates:
     - metadata:
         name: postgres-data
