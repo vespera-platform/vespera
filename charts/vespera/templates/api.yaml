@@ -47,6 +47,7 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: tmp
+      serviceAccountName: api
       volumes:
         - name: tmp
           emptyDir: {}

@@ -40,6 +40,7 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: tmp
+      serviceAccountName: target-sim
       volumes:
         - name: tmp
           emptyDir: { }
