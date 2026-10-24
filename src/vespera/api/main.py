@@ -5,16 +5,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+import random
 
 from vespera.api.models import Target, Check
 from vespera.api.schemas import TargetIn, TargetOut, CheckOut
 from vespera.common.db import get_db
 from vespera.common.config import get_settings
-app = FastAPI(title="Vespera")
 
-@app.get("/")
-def root():
-    return {"app": "vespera"}
+
+FAULT_EXEMPT = {"/healthz", "/readyz", "/metrics"}
 
 REQUESTS = Counter(
     "http_requests_total",
@@ -26,6 +25,17 @@ LATENCY = Histogram(
     "HTTP request duration in seconds",
     ["method", "route", "app_version"],
 )
+
+def inject_fault(request: Request) -> None:
+    rate = get_settings().fault_error_rate
+    if rate > 0 and request.url.path not in FAULT_EXEMPT and random.random() < rate:
+        raise HTTPException(status_code=500, detail="injected fault")
+
+app = FastAPI(title="Vespera", dependencies=[Depends(inject_fault)])
+
+@app.get("/")
+def root():
+    return {"app": "vespera"}
 
 @app.post("/targets", status_code=201)
 def create_target(target: TargetIn, db: Session = Depends(get_db)) -> TargetOut:
