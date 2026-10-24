@@ -5,6 +5,7 @@ image:
 api:
   replicas: 2
   host: "" #potem ustawić
+  faultErrorRate: 0
 
 networkPolicy:
   gatewayCIDR: ""

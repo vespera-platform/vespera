@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import SecretStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     webhook_url: str
     redis_url: str
     shard_count: int = 1
+    fault_error_rate: float = Field(default=0.0, ge=0.0, le=1.0)
 
 @lru_cache
 def get_settings() -> Settings:

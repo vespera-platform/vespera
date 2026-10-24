@@ -42,6 +42,8 @@ spec:
               value: redis://redis:6379/0
             - name: WEBHOOK_URL
               value: http://target-sim:8000/hook
+            - name: FAULT_ERROR_RATE
+              value: {{ .Values.api.faultErrorRate | quote }}
           securityContext:
             {{- include "vespera.securityContext" . | nindent 12 }}
           volumeMounts:
