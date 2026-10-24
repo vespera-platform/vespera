@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from uuid import UUID
+import time
 from sqlalchemy.orm import Session
 from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 from vespera.api.models import Target, Check
 from vespera.api.schemas import TargetIn, TargetOut, CheckOut
@@ -10,11 +12,20 @@ from vespera.common.db import get_db
 from vespera.common.config import get_settings
 app = FastAPI(title="Vespera")
 
-
 @app.get("/")
 def root():
     return {"app": "vespera"}
 
+REQUESTS = Counter(
+    "http_requests_total",
+    "HTTP requests handled by the API",
+    ["method", "route", "status", "app_version"],
+)
+LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "route", "app_version"],
+)
 
 @app.post("/targets", status_code=201)
 def create_target(target: TargetIn, db: Session = Depends(get_db)) -> TargetOut:
@@ -71,3 +82,23 @@ def list_checks(target_id: UUID, limit: int = 20, db: Session = Depends(get_db))
 @app.get("/version")
 def version():
     return {"version": get_settings().vespera_version}
+
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    start = time.perf_counter()
+    status = "500"
+    try:
+        response = await call_next(request)
+        status = str(response.status_code)
+        return response
+    finally:
+        route = request.scope.get("route")
+        route = route.path if route else "unmatched"
+        version = get_settings().vespera_version
+        REQUESTS.labels(request.method, route, status, version).inc()
+        LATENCY.labels(request.method, route, version).observe(time.perf_counter() - start)
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
