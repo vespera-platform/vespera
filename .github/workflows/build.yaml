@@ -89,14 +89,18 @@ jobs:
 
       - name: tag/commit/merge
         run: |
-          git config user.name "vespera-ci-bot[bot]"
-          git config user.email "vespera-ci-bot[bot]@users.noreply.github.com"
-          git switch -c bump/dev-${{ github.sha }}
+          BRANCH="bump/dev-${{ github.sha }}"
+          FILE="envs/dev/values.yaml"
+          
           yq -i '.image.tag = "${{ github.sha }}"' envs/dev/values.yaml
-          git commit -am "ci: dev -> ${{ github.sha }}"
-          git push -u origin HEAD
-          gh pr create --fill
-          gh pr merge --squash --delete-branch
+          
+          gh api repos/vespera-platform/vespera-gitops/git/refs -f ref="refs/heads/$BRANCH" -f sha="$(git rev-parse HEAD)"
+          
+          gh api -X PUT "repos/vespera-platform/vespera-gitops/contents/$FILE" -f message="ci: dev -> ${{ github.sha }}"  -f content="$(base64 -w0 "$FILE")" -f sha="$(git rev-parse "HEAD:$FILE")" -f branch="$BRANCH"
+          
+          gh pr create --head "$BRANCH" --base main --title "ci: dev -> ${{ github.sha }}" --body "zmiana tag'u dev (auto)"
+          
+          gh pr merge "$BRANCH" --squash --delete-branch
 
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token}}
