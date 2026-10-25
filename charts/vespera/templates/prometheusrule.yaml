@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: vespera
+  namespace: {{ .Release.Namespace }}
+spec:
+  groups:
+    - name: vespera
+      rules:
+        - alert: VesperaHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}", status=~"5..", route!~"/healthz|/readyz|/metrics"}[1m]))
+              /
+            sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}", route!~"/healthz|/readyz|/metrics"}[1m]))
+            > 0.05
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: Vespera API error rate above 5% for 2 minutes
