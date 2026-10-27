@@ -4,9 +4,10 @@ from typing import Literal
 from fastapi import FastAPI, Response, Request
 from pydantic import BaseModel
 
+from vespera.common.logging import setup_logging
 app = FastAPI(title="target-sim")
 
-logging.basicConfig(level=logging.INFO)
+setup_logging("target-sim")
 log = logging.getLogger(__name__)
 
 mode: str = "up"
