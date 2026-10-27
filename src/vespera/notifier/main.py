@@ -6,8 +6,9 @@ import redis.asyncio as aioredis
 from redis.exceptions import ResponseError
 
 from vespera.common.config import get_settings
+from vespera.common.logging import setup_logging
 
-logging.basicConfig(level=logging.INFO)
+setup_logging("notifier")
 log = logging.getLogger(__name__)
 
 STREAM = "vespera:events"

@@ -1,16 +1,19 @@
 from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from uuid import UUID
 import time
+import random
+import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
-import random
+
 
 from vespera.api.models import Target, Check
 from vespera.api.schemas import TargetIn, TargetOut, CheckOut
 from vespera.common.db import get_db
 from vespera.common.config import get_settings
+from vespera.common.logging import setup_logging
 
 
 FAULT_EXEMPT = {"/healthz", "/readyz", "/metrics"}
@@ -30,6 +33,10 @@ def inject_fault(request: Request) -> None:
     rate = get_settings().fault_error_rate
     if rate > 0 and request.url.path not in FAULT_EXEMPT and random.random() < rate:
         raise HTTPException(status_code=500, detail="injected fault")
+
+setup_logging("api")
+
+log = logging.getLogger(__name__)
 
 app = FastAPI(title="Vespera", dependencies=[Depends(inject_fault)])
 
@@ -102,13 +109,17 @@ async def metrics_middleware(request: Request, call_next):
         status = str(response.status_code)
         return response
     finally:
+        elapsed = time.perf_counter() - start
         route = request.scope.get("route")
         route = route.path if route else "unmatched"
         version = get_settings().vespera_version
         REQUESTS.labels(request.method, route, status, version).inc()
-        LATENCY.labels(request.method, route, version).observe(time.perf_counter() - start)
+        LATENCY.labels(request.method, route, version).observe(elapsed)
+        if request.url.path not in FAULT_EXEMPT:
+            log.info("request", extra={"method": request.method, "route": route, "status": status, "duration_ms" : round(elapsed * 1000, 1)})
 
 
 @app.get("/metrics", include_in_schema=False)
 def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+

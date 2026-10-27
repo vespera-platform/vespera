@@ -15,6 +15,7 @@ from vespera.common.db import SessionLocal
 from vespera.api.models import Target, Check
 from vespera.common.config import get_settings
 from vespera.common.sharding import shard_of
+from vespera.common.logging import setup_logging
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def handle_sigterm(signum, frame):
     stopping = True
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO)
+    setup_logging("checker")
     logging.getLogger("httpx").setLevel(logging.WARNING)
     signal.signal(signal.SIGTERM, handle_sigterm)
     interval = get_settings().check_interval
