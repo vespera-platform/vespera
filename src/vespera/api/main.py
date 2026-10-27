@@ -40,6 +40,26 @@ log = logging.getLogger(__name__)
 
 app = FastAPI(title="Vespera", dependencies=[Depends(inject_fault)])
 
+FAULT_EXEMPT = {"/healthz", "/readyz", "/metrics"}
+
+REQUESTS = Counter(
+    "http_requests_total",
+    "HTTP requests handled by the API",
+    ["method", "route", "status", "app_version"],
+)
+LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "route", "app_version"],
+)
+
+def inject_fault(request: Request) -> None:
+    rate = get_settings().fault_error_rate
+    if rate > 0 and request.url.path not in FAULT_EXEMPT and random.random() < rate:
+        raise HTTPException(status_code=500, detail="injected fault")
+
+app = FastAPI(title="Vespera", dependencies=[Depends(inject_fault)])
+
 @app.get("/")
 def root():
     return {"app": "vespera"}
