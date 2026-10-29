@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: api-error-rate
+  namespace: {{ .Release.Namespace }}
+spec:
+  args:
+    - name: canary-hash
+  metrics:
+    - name: error-rate
+      initialDelay: 30s
+      interval: 30s
+      count: 4
+      failureLimit: 1
+      successCondition: result[0] < 0.05
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-prometheus.monitoring.svc:9090
+          query: |
+            (sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}", rollouts_pod_template_hash="{{`{{args.canary-hash}}`}}", status=~"5..", route!~"/healthz|/readyz|/metrics"}[1m])) or vector(0))
+            /
+            sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}", rollouts_pod_template_hash="{{`{{args.canary-hash}}`}}", route!~"/healthz|/readyz|/metrics"}[1m]))
+

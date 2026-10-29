@@ -65,9 +65,21 @@ spec:
             namespace: {{ .Release.Namespace }}
       steps:
         - setWeight: 10
-        - pause: { }
+        - analysis:
+            template:
+              - templateName: api-error-rate
+            args:
+              - name: canary-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
         - setWeight: 50
-        - pause: { }
+        - analysis:
+            template:
+              - templateName: api-error-rate
+            args:
+              - name: canary-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
 
 ---
 apiVersion: v1
