@@ -66,7 +66,7 @@ spec:
       steps:
         - setWeight: 10
         - analysis:
-            template:
+            templates:
               - templateName: api-error-rate
             args:
               - name: canary-hash
@@ -74,7 +74,7 @@ spec:
                   podTemplateHashValue: Latest
         - setWeight: 50
         - analysis:
-            template:
+            templates:
               - templateName: api-error-rate
             args:
               - name: canary-hash
