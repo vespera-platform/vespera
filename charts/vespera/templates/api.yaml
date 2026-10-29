@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: api
   namespace: {{ .Release.Namespace }}
@@ -22,6 +22,7 @@ spec:
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           ports:
             - containerPort: 8000
+              name: http
           livenessProbe:
             httpGet:
               port: 8000
@@ -53,13 +54,43 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
+  strategy:
+    canary:
+      stableService: api
+      canaryService: api-canary
+      trafficRouting:
+        plugins:
+          argoproj-labs/gatewayAPI:
+            httpRoute: api
+            namespace: {{ .Release.Namespace }}
+      steps:
+        - setWeight: 10
+        - pause: { }
+        - setWeight: 50
+        - pause: { }
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
   name: api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: api
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+  selector:
+    app: api
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-canary
   namespace: {{ .Release.Namespace }}
   labels:
     app: api
