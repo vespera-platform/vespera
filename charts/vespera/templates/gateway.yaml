@@ -26,3 +26,5 @@ spec:
     - backendRefs:
       - name: api
         port: 80
+      - name: api-canary
+        port: 80

@@ -1,5 +1,5 @@
 apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+kind: PodMonitor
 metadata:
   name: api
   namespace: {{ .Release.Namespace }}
@@ -7,7 +7,9 @@ spec:
   selector:
     matchLabels:
       app: api
-  endpoints:
+  podTargetLabels:
+    - rollouts-pod-template-hash
+  podMetricsEndpoints:
     - port: http
       path: /metrics
       interval: 15s
