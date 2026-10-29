@@ -58,6 +58,10 @@ def inject_fault(request: Request) -> None:
     if rate > 0 and request.url.path not in FAULT_EXEMPT and random.random() < rate:
         raise HTTPException(status_code=500, detail="injected fault")
 
+setup_logging("api")
+
+log = logging.getLogger(__name__)
+
 app = FastAPI(title="Vespera", dependencies=[Depends(inject_fault)])
 
 @app.get("/")
