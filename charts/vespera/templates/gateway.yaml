@@ -4,7 +4,7 @@ metadata:
   name: vespera-gateway
   namespace: {{ .Release.Namespace }}
 spec:
-  gatewayClassName: cloud-provider-kind
+  gatewayClassName: {{ .Values.gateway.className }}
   listeners:
     - name: http
       protocol: HTTP
