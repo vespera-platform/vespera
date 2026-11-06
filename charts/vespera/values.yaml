@@ -14,3 +14,6 @@ networkPolicy:
 externalSecret:
   store: ""       #  wymagane w envs
   remoteKey: ""   #  wymagane w envs
+
+gateway:
+  className: cloud-provider-kind
