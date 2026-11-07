@@ -17,3 +17,6 @@ externalSecret:
 
 gateway:
   className: cloud-provider-kind
+  tls:
+    enabled: false
+    issuer: ""

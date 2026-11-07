@@ -1,0 +1,14 @@
+{{- if .Values.gateway.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vespera-tls
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: vespera-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ required "gateway.tls.issuer jest wymagane, gdy tls.enabled" .Values.gateway.tls.issuer }}
+  dnsNames:
+    - {{ .Values.api.host | quote }}
+{{- end }}
