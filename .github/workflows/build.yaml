@@ -89,18 +89,22 @@ jobs:
 
       - name: tag/commit/merge
         run: |
-          BRANCH="bump/dev-${{ github.sha }}"
-          FILE="envs/dev/values.yaml"
-          
-          yq -i '.image.tag = "${{ github.sha }}"' envs/dev/values.yaml
-          
-          gh api repos/vespera-platform/vespera-gitops/git/refs -f ref="refs/heads/$BRANCH" -f sha="$(git rev-parse HEAD)"
-          
-          gh api -X PUT "repos/vespera-platform/vespera-gitops/contents/$FILE" -f message="ci: dev -> ${{ github.sha }}"  -f content="$(base64 -w0 "$FILE")" -f sha="$(git rev-parse "HEAD:$FILE")" -f branch="$BRANCH"
-          
-          gh pr create --head "$BRANCH" --base main --title "ci: dev -> ${{ github.sha }}" --body "zmiana tag'u dev (auto)"
-          
-          gh pr merge "$BRANCH" --squash --delete-branch
+          BRANCH="bump/${{ github.sha }}"
 
+          gh api repos/vespera-platform/vespera-gitops/git/refs -f ref="refs/heads/$BRANCH" -f sha="$(git rev-parse HEAD)"
+
+          for ENV in dev staging; do
+            FILE="envs/$ENV/values.yaml"
+            yq -i '.image.tag = "${{ github.sha }}"' "$FILE"
+            gh api -X PUT "repos/vespera-platform/vespera-gitops/contents/$FILE" \
+              -f message="ci: $ENV -> ${{ github.sha }}" \
+              -f content="$(base64 -w0 "$FILE")" \
+              -f sha="$(git rev-parse "HEAD:$FILE")" \
+              -f branch="$BRANCH"
+          done
+
+          gh pr create --head "$BRANCH" --base main --title "ci: dev+staging -> ${{ github.sha }}" --body "zmiana tagu dev i staging (auto)"
+
+          gh pr merge "$BRANCH" --squash --delete-branch
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token}}
