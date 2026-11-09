@@ -6,6 +6,8 @@ api:
   replicas: 2
   host: "" #potem ustawić
   faultErrorRate: 0
+  rollout:
+    analysis: true
 
 networkPolicy:
   gatewayCIDR: ""
