@@ -58,6 +58,15 @@ spec:
       ports:
         - port: 8000
           protocol: TCP
+{{- if .Values.postDeployTest.enabled }}
+    - from:
+        - podSelector:
+            matchLabels:
+              app: postdeploy
+      ports:
+        - port: 8000
+          protocol: TCP
+{{- end }}
   egress:
     - to:
         - podSelector:
@@ -237,3 +246,25 @@ spec:
           protocol: TCP
         - port: 443
           protocol: TCP
+
+---
+{{- if .Values.postDeployTest.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postdeploy
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: postdeploy
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: api
+      ports:
+        - port: 8000
+          protocol: TCP
+{{- end }}
