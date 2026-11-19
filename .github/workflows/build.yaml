@@ -108,5 +108,35 @@ jobs:
           gh pr create --head "$BRANCH" --base main --title "ci: dev+staging -> ${{ github.sha }}" --body "zmiana tagu dev i staging (auto)"
 
           gh pr merge "$BRANCH" --squash --delete-branch
+          
+          PROD_BRANCH="promote-prod/${{ github.sha }}"
+          gh api repos/vespera-platform/vespera-gitops/git/refs -f ref="refs/heads/$PROD_BRANCH" -f sha="$(git rev-parse HEAD)"
+          
+          FILE="envs/prod/values.yaml"
+          yq -i '.image.tag = "${{ github.sha }}"' "$FILE"
+          gh api -X PUT "repos/vespera-platform/vespera-gitops/contents/$FILE" \
+            -f message="ci: prod -> ${{ github.sha }}" \
+            -f content="$(base64 -w0 "$FILE")" \
+            -f sha="$(git rev-parse "HEAD:$FILE")" \
+            -f branch="$PROD_BRANCH"
+          
+          FILE="clusters/eks/apps/vespera-prod.yaml"
+          yq -i '(.spec.sources[] | select(.repoURL == "https://github.com/vespera-platform/vespera.git")).targetRevision = "${{ github.sha }}"' "$FILE"
+          gh api -X PUT "repos/vespera-platform/vespera-gitops/contents/$FILE" \
+            -f message="ci: prod chart -> ${{ github.sha }}" \
+            -f content="$(base64 -w0 "$FILE")" \
+            -f sha="$(git rev-parse "HEAD:$FILE")" \
+            -f branch="$PROD_BRANCH"
+          
+          gh pr create --head "$PROD_BRANCH" --base main \
+            --title "promote: prod -> ${{ github.sha }}" \
+            --body "Promocja na prod - wymaga decyzji człowieka.
+
+          Przed zatwierdzeniem sprawdź:
+          - zmiany w kodzie i charcie między obecną wersją proda a tym SHA,
+          - wynik testu po wdrożeniu na stagingu (Job postdeploy) i stan aplikacji w Argo CD,
+          - logi i metryki stagingu (błędy, czasy odpowiedzi) od wdrożenia tej wersji,
+          - zmiany zależności i obrazu bazowego (Dependabot, wynik skanu Trivy w buildzie)."
+
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token}}
