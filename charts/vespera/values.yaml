@@ -22,3 +22,6 @@ gateway:
   tls:
     enabled: false
     issuer: ""
+
+postDeployTest:
+  enabled: false
