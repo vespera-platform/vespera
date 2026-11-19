@@ -1,5 +1,14 @@
+{{- $s := .Values.api.rollout.strategy | default "canary" }}
+{{- if not (has $s (list "canary" "rolling" "blueGreen")) }}
+{{- fail (printf "api.rollout.strategy: nieznana wartość %q (canary|rolling|blueGreen)" $s) }}
+{{- end }}
+{{- if eq $s "rolling" }}
+apiVersion: apps/v1
+kind: Deployment
+{{- else }}
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
+{{- end }}
 metadata:
   name: api
   namespace: {{ .Release.Namespace }}
@@ -54,6 +63,26 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
+  {{- if eq $s "rolling" }}
+  strategy:
+    type: RollingUpdate
+  {{- else if eq $s "blueGreen" }}
+  strategy:
+    blueGreen:
+      activeService: api
+      previewService: api-canary
+      autoPromotionEnabled: true
+      scaleDownDelaySeconds: 180
+      {{- if .Values.api.rollout.analysis }}
+      postPromotionAnalysis:
+        templates:
+          - templateName: api-error-rate
+        args:
+          - name: canary-hash
+            valueFrom:
+              podTemplateHashValue: Latest
+      {{- end }}
+  {{- else }}
   strategy:
     canary:
       stableService: api
@@ -84,6 +113,7 @@ spec:
                 valueFrom:
                   podTemplateHashValue: Latest
         {{- end }}
+  {{- end }}
 ---
 apiVersion: v1
 kind: Service
@@ -100,7 +130,7 @@ spec:
       targetPort: 8000
   selector:
     app: api
-
+{{- if ne $s "rolling" }}
 ---
 apiVersion: v1
 kind: Service
@@ -117,3 +147,4 @@ spec:
       targetPort: 8000
   selector:
     app: api
+{{- end }}

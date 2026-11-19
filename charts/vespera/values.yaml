@@ -8,6 +8,7 @@ api:
   faultErrorRate: 0
   rollout:
     analysis: true
+    strategy: canary
 
 networkPolicy:
   gatewayCIDR: ""

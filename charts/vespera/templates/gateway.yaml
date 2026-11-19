@@ -35,5 +35,7 @@ spec:
     - backendRefs:
       - name: api
         port: 80
+      {{- if eq (.Values.api.rollout.strategy | default "canary") "canary" }}
       - name: api-canary
         port: 80
+      {{- end }}
