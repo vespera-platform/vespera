@@ -42,7 +42,7 @@ app = FastAPI(title="Vespera", dependencies=[Depends(inject_fault)])
 
 @app.get("/")
 def root():
-    return {"app": "vespera"}
+    return {"app": "vespera", "release": "test"}
 
 @app.post("/targets", status_code=201)
 def create_target(target: TargetIn, db: Session = Depends(get_db)) -> TargetOut:
