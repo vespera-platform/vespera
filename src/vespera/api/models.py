@@ -18,7 +18,6 @@ class Target(Base):
     )
     status: Mapped[str | None] = mapped_column(String(10))
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    label: Mapped[str | None] = mapped_column(String(50))
     note: Mapped[str | None] = mapped_column(String(200))
 
 class Check(Base):
